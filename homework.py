@@ -25,9 +25,7 @@ RETRY_TIME = 600
 ENDPOINT = 'https://practicum.yandex.ru/api/user_api/homework_statuses/'
 HEADERS = {'Authorization': f'OAuth {PRACTICUM_TOKEN}'}
 
-# Согласен, VERDICTS было бы лучше, но это имя было в прекоде.
-# Если изменить, то работа не пройдёт тесты перед ревью.
-HOMEWORK_STATUSES = {
+VERDICTS = {
     'approved': 'Работа проверена: ревьюеру всё понравилось. Ура!',
     'reviewing': 'Работа взята на проверку ревьюером.',
     'rejected': 'Работа проверена: у ревьюера есть замечания.'
@@ -90,16 +88,20 @@ def check_response(response):
 def parse_status(homework):
     """Извлекаем статус из конкретной домашней работы."""
     homework_name = homework.get('homework_name')
-    homework_status = homework.get('status')
-    if homework_status is None:
-        message = 'Отсутствует ключ homework_status'
+    if homework_name is None:
+        message = 'Отсутствует ключ homework_name'
         logger.error(message)
         raise KeyError(message)
-    if homework_status not in HOMEWORK_STATUSES:
+    homework_status = homework.get('status')
+    if homework_status is None:
+        message = 'Отсутствует ключ status'
+        logger.error(message)
+        raise KeyError(message)
+    if homework_status not in VERDICTS:
         message = 'Неизвестный статус домашней работы'
         logger.error(message)
         raise KeyError(message)
-    verdict = HOMEWORK_STATUSES[homework_status]
+    verdict = VERDICTS[homework_status]
     return f'Изменился статус проверки работы "{homework_name}". {verdict}'
 
 
@@ -122,7 +124,6 @@ def main():
     if not check_tokens():
         message = 'Отсутствует переменная окружения'
         logger.critical(message)
-        send_message(bot, message)
         raise Exception(message)
     while True:
         try:
@@ -139,10 +140,8 @@ def main():
             message = f'Сбой в работе программы: {error}'
             if message != last_message:
                 send_message(bot, message)
-            else:
-                pass
-            logger.error(message)
-            last_message = message
+                logger.error(message)
+                last_message = message
             time.sleep(RETRY_TIME)
 
 
