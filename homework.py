@@ -43,7 +43,6 @@ def send_message(bot, message):
     except (TypeError, NameError, AttributeError, Exception) as error:
         message = f'Ошибка отправки сообщения: {error}'
         logger.error(message)
-        raise Exception(message)
 
 
 def get_api_answer(current_timestamp):
@@ -117,14 +116,15 @@ def check_tokens():
 
 def main():
     """Основная логика работы бота."""
-    bot = telegram.Bot(token=TELEGRAM_TOKEN)
-    current_timestamp = int(time.time())
-    last_message = ''
-
     if not check_tokens():
         message = 'Отсутствует переменная окружения'
         logger.critical(message)
         raise Exception(message)
+
+    bot = telegram.Bot(token=TELEGRAM_TOKEN)
+    current_timestamp = int(time.time())
+    last_message = ''
+
     while True:
         try:
             response = get_api_answer(current_timestamp)
